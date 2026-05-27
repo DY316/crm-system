@@ -9,12 +9,13 @@ export class IdempotencyKeyMiddleware implements NestMiddleware {
   constructor(private readonly idempotencyKeyService: IdempotencyKeyService) {}
 
   use(request: Request, _response: Response, next: NextFunction): void {
-    const idempotencyKey = this.idempotencyKeyService.normalize(
-      request.headers[IDEMPOTENCY_KEY_HEADER],
-    );
+    const idempotency = this.idempotencyKeyService.resolve(request.headers[IDEMPOTENCY_KEY_HEADER], {
+      method: request.method,
+      path: request.originalUrl,
+    });
 
-    if (idempotencyKey) {
-      request.idempotencyKey = idempotencyKey;
+    if (idempotency.key) {
+      request.idempotencyKey = idempotency.key;
     }
 
     next();

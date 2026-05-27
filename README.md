@@ -138,6 +138,50 @@ Error:
 }
 ```
 
+### Audit And Security Foundation
+
+Stage 0 provides backend-only audit/security primitives without adding login APIs,
+JWT, RBAC guards, schema changes, migrations, seeds, or frontend pages.
+
+Audit services live under `apps/server/src/modules/audit`:
+
+- `AuditLogWriterService` writes append-only rows to `audit_logs`.
+- `AuditLogService` exposes event methods for login success, login failure, login rate limiting, logout, and permission denial.
+- `AuditRequestContextService` extracts `request_id`, IP address, User-Agent, and optional `Idempotency-Key` from an Express request.
+- `AuditEventMiddleware` observes auth/login, auth/logout, and HTTP 403 responses and calls audit services without implementing auth, JWT, or RBAC logic.
+
+Every audit writer call requires a non-empty `requestId`. The request context
+middleware accepts a valid inbound `x-request-id` or generates one, stores it on
+`request.requestId`, and sends it back in the `x-request-id` response header.
+Audit rows store that value in `audit_logs.request_id` for cross-log correlation.
+
+Audit rows include:
+
+- `workspace_id`
+- `actor_id`
+- `action`
+- `target_table`
+- `target_id`
+- `related_type`
+- `related_id`
+- `before_data`
+- `after_data`
+- `request_id`
+- `ip_address`
+- `user_agent`
+- `created_at`
+
+Security services live under `apps/server/src/modules/security`:
+
+- `SecurityAuditService.recordPermissionDenied(...)` delegates to the audit log service.
+- Future permission guards can inject this service directly, while `AuditEventMiddleware` also records 403 responses as a minimal no-RBAC hook.
+
+`Idempotency-Key` foundation lives in `apps/server/src/common`:
+
+- `IdempotencyKeyMiddleware` normalizes the `Idempotency-Key` header and stores it on `request.idempotencyKey`.
+- `IdempotencyKeyService` provides key normalization, write-method detection, scoped storage key building, and deterministic payload fingerprinting.
+- Stage 0 does not perform durable request de-duplication; future write APIs can use the service as the extension point.
+
 ### UTC Time Rule
 
 Backend services should store, compare, and return timestamps in UTC. API timestamps should use ISO 8601 UTC strings, for example `2026-05-27T05:30:00.000Z`. Local time zones belong in presentation logic and should not be persisted in backend domain records.
