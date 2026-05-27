@@ -6,6 +6,7 @@ import { ErrorAlert } from "../ui/ErrorAlert";
 export function AppLayout() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const workspace = useAuthStore((state) => state.workspace);
   const lastError = useAuthStore((state) => state.lastError);
   const logout = useAuthStore((state) => state.logout);
 
@@ -20,7 +21,7 @@ export function AppLayout() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <div>
             <p className="text-sm font-semibold text-brand-700">CRM</p>
-            <p className="text-xs text-stone-500">Frontend Foundation</p>
+            <p className="text-xs text-stone-500">{workspace?.name ?? "Frontend Foundation"}</p>
           </div>
           <div className="flex min-w-0 items-center gap-3">
             {user?.email ? (
@@ -31,7 +32,7 @@ export function AppLayout() {
               onClick={handleLogout}
               className="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 transition hover:border-brand-600 hover:text-brand-700"
             >
-              退出
+              Sign out
             </button>
           </div>
         </div>

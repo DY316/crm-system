@@ -1,4 +1,4 @@
-import type { CurrentUser, LoginCredentials, LoginResponse } from "../../types/auth";
+import type { AuthSessionPayload, LoginCredentials, LoginResponse } from "../../types/auth";
 import { apiClient, type ApiClientResult } from "./client";
 
 export const authApi = {
@@ -11,8 +11,8 @@ export const authApi = {
     });
   },
 
-  me(): Promise<ApiClientResult<CurrentUser>> {
-    return apiClient.request<CurrentUser>("/api/v1/auth/me", {
+  me(): Promise<ApiClientResult<AuthSessionPayload>> {
+    return apiClient.request<AuthSessionPayload>("/api/v1/auth/me", {
       method: "GET",
     });
   },
