@@ -12,9 +12,13 @@
     "server:start": "pnpm --filter @crm/server start",
     "server:test": "pnpm --filter @crm/server test",
     "server:typecheck": "pnpm --filter @crm/server typecheck",
+    "db:generate": "pnpm --filter @crm/server db:generate",
+    "db:migrate:deploy": "pnpm --filter @crm/server db:migrate:deploy",
+    "db:seed": "pnpm --filter @crm/server db:seed",
     "web:build": "pnpm --filter web build",
     "web:dev": "pnpm --filter web dev",
     "web:preview": "pnpm --filter web preview",
+    "web:test": "pnpm --filter web test",
     "web:typecheck": "pnpm --filter web typecheck"
   }
 }

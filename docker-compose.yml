@@ -19,6 +19,20 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: crm-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   server:
     build:
       context: .
@@ -29,6 +43,10 @@ services:
       SERVER_PORT: ${SERVER_PORT:-3000}
       SERVER_CORS_ORIGINS: ${SERVER_CORS_ORIGINS:-http://localhost:5173}
       DATABASE_URL: ${DATABASE_URL:-postgresql://crm:crm_password@postgres:5432/crm?schema=public}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      JWT_SECRET: ${JWT_SECRET:-change-me-before-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
+      JWT_ACCESS_TOKEN_TTL_SECONDS: ${JWT_ACCESS_TOKEN_TTL_SECONDS:-3600}
       TZ: ${TZ:-UTC}
       PGTZ: ${PGTZ:-UTC}
     ports:
@@ -36,6 +54,29 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    image: node:22-alpine
+    container_name: crm-web
+    restart: unless-stopped
+    working_dir: /app
+    environment:
+      VITE_API_PROXY_TARGET: http://server:${SERVER_PORT:-3000}
+    ports:
+      - "${WEB_PORT:-5173}:5173"
+    volumes:
+      - .:/app
+    command: >
+      sh -c "corepack enable &&
+      corepack prepare pnpm@9.15.0 --activate &&
+      pnpm install --frozen-lockfile &&
+      pnpm --filter web dev -- --host 0.0.0.0 --port 5173"
+    depends_on:
+      server:
+        condition: service_started
 
 volumes:
   postgres_data:
+  redis_data:
