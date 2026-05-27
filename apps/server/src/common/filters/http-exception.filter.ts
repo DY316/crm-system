@@ -38,15 +38,20 @@ export class HttpExceptionFilter implements ExceptionFilter {
       this.logger.error(normalized.message, stack, requestId);
     }
 
+    if (Object.keys(normalized.details).length > 0) {
+      this.logger.debug(
+        `${normalized.code} ${normalized.message} ${JSON.stringify(normalized.details)}`,
+        requestId,
+      );
+    }
+
     const payload: ApiErrorResponse = {
       success: false,
-      data: null,
+      request_id: requestId,
       error: {
         code: normalized.code,
         message: normalized.message,
-        details: normalized.details,
       },
-      request_id: requestId,
     };
 
     response.status(normalized.statusCode).json(payload);
@@ -92,7 +97,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     return {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       code: ErrorCode.INTERNAL_SERVER_ERROR,
-      message: '服务内部错误',
+      message: 'Internal server error',
       details: {},
     };
   }
@@ -116,7 +121,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       return message;
     }
 
-    return '请求处理失败';
+    return 'Request failed';
   }
 
   private formatDetails(message: unknown): ErrorDetails {

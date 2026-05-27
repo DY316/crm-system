@@ -18,7 +18,7 @@ export function createValidationPipe(): ValidationPipe {
       enableImplicitConversion: true,
     },
     exceptionFactory: (errors) =>
-      new AppException(ErrorCode.VALIDATION_ERROR, '请求参数校验失败', HttpStatus.BAD_REQUEST, {
+      new AppException(ErrorCode.VALIDATION_ERROR, 'Request validation failed', HttpStatus.BAD_REQUEST, {
         fields: flattenValidationErrors(errors),
       }),
   });

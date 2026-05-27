@@ -8,12 +8,10 @@ export interface ApiSuccessResponse<TData> {
 export interface ApiErrorPayload {
   code: string;
   message: string;
-  details: Record<string, unknown>;
 }
 
 export interface ApiErrorResponse {
   success: false;
-  data: null;
-  error: ApiErrorPayload;
   request_id: string;
+  error: ApiErrorPayload;
 }

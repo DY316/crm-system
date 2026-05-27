@@ -2,6 +2,10 @@
   "name": "@crm/server",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20 <25",
+    "pnpm": ">=9 <10"
+  },
   "scripts": {
     "build": "nest build",
     "start": "node dist/main.js",

@@ -4,13 +4,13 @@
 
 ### Requirements
 
-- Node.js 20+
-- pnpm 9+
+- Node.js >=20 <25
+- pnpm >=9 <10
 
 ### Install
 
-```powershell
-pnpm.cmd install
+```bash
+pnpm install
 ```
 
 ### Environment
@@ -26,16 +26,16 @@ Server-related variables:
 
 ### Start Backend
 
-```powershell
-pnpm.cmd server:dev
+```bash
+pnpm server:dev
 ```
 
 The backend listens on `http://localhost:3000` by default. If port `3000` is already in use locally, set `SERVER_PORT` to another port before starting.
 
 ### Health Check
 
-```powershell
-Invoke-WebRequest http://localhost:3000/api/v1/system/health
+```bash
+curl http://localhost:3000/api/v1/system/health
 ```
 
 Expected response body shape:
@@ -53,12 +53,41 @@ Expected response body shape:
 
 The response header includes `x-request-id`.
 
+### DTO Validation Check
+
+```bash
+curl "http://localhost:3000/api/v1/system/ping?limit=10"
+curl "http://localhost:3000/api/v1/system/ping?limit=bad"
+curl "http://localhost:3000/api/v1/system/ping?extra=1"
+```
+
+The invalid examples return the unified error envelope with `VALIDATION_ERROR`.
+
 ### Verification
 
-```powershell
-pnpm.cmd server:typecheck
-pnpm.cmd server:build
-pnpm.cmd server:test
+```bash
+pnpm server:typecheck
+pnpm server:build
+pnpm server:test
+```
+
+### Docker Compose
+
+```bash
+docker compose up --build server
+```
+
+The compose service uses `.env.example`-compatible server variables:
+
+- `NODE_ENV`
+- `SERVER_HOST`
+- `SERVER_PORT`
+- `SERVER_CORS_ORIGINS`
+
+Health check after startup:
+
+```bash
+curl http://localhost:3000/api/v1/system/health
 ```
 
 ### API Base Path
@@ -83,13 +112,11 @@ Error:
 ```json
 {
   "success": false,
-  "data": null,
+  "request_id": "req_xxx",
   "error": {
     "code": "ERROR_CODE",
-    "message": "error message",
-    "details": {}
-  },
-  "request_id": "req_xxx"
+    "message": "error message"
+  }
 }
 ```
 
