@@ -1,0 +1,92 @@
+name: Database Foundation
+
+on:
+  push:
+    branches:
+      - feature/database-foundation
+    paths:
+      - ".github/workflows/database-foundation.yml"
+      - "apps/server/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "docker-compose.yml"
+      - "README.md"
+  pull_request:
+    branches:
+      - develop
+    paths:
+      - ".github/workflows/database-foundation.yml"
+      - "apps/server/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "docker-compose.yml"
+      - "README.md"
+  workflow_dispatch:
+
+jobs:
+  database-foundation:
+    name: Database Foundation Acceptance
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: crm
+          TZ: UTC
+          PGTZ: UTC
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d crm"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/crm?schema=public
+      SEED_ADMIN_EMAIL: admin@example.com
+      SEED_ADMIN_PASSWORD: change-me-before-seeding
+      TZ: UTC
+      PGTZ: UTC
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm --filter @crm/server db:generate
+
+      - name: Apply database migrations
+        run: pnpm --filter @crm/server db:migrate:deploy
+
+      - name: Seed database foundation
+        run: pnpm --filter @crm/server db:seed
+
+      - name: Verify database foundation
+        run: pnpm --filter @crm/server exec node prisma/verify-foundation.mjs
+
+      - name: Typecheck server
+        run: pnpm server:typecheck
+
+      - name: Build server
+        run: pnpm server:build
