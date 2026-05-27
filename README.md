@@ -13,6 +13,24 @@
 pnpm install
 ```
 
+#### Windows PowerShell
+
+Default Windows PowerShell may block `pnpm.ps1` because of `ExecutionPolicy`.
+Use one of these options before running the install flow:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+pnpm install
+```
+
+Or call the command shim directly without changing the execution policy:
+
+```powershell
+pnpm.cmd install
+```
+
+If you choose the `pnpm.cmd` path, use the same form for later commands, for example `pnpm.cmd server:dev`.
+
 ### Environment
 
 Copy `.env.example` to `.env` if local overrides are needed.
