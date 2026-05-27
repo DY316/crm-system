@@ -11,6 +11,10 @@
     "server:dev": "pnpm --filter @crm/server start:dev",
     "server:start": "pnpm --filter @crm/server start",
     "server:test": "pnpm --filter @crm/server test",
-    "server:typecheck": "pnpm --filter @crm/server typecheck"
+    "server:typecheck": "pnpm --filter @crm/server typecheck",
+    "web:build": "pnpm --filter web build",
+    "web:dev": "pnpm --filter web dev",
+    "web:preview": "pnpm --filter web preview",
+    "web:typecheck": "pnpm --filter web typecheck"
   }
 }
