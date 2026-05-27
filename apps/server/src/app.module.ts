@@ -8,6 +8,7 @@ import { IdempotencyKeyMiddleware } from './common/middleware/idempotency-key.mi
 import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
 import { HealthModule } from './health/health.module';
+import { AuthModule } from './modules/auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
@@ -22,6 +23,7 @@ import { PrismaModule } from './prisma/prisma.module';
     CommonModule,
     PrismaModule,
     HealthModule,
+    AuthModule,
   ],
 })
 export class AppModule implements NestModule {
