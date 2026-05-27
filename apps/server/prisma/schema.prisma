@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email             String            @db.VarChar(320)
+  password_hash     String            @db.Text
+  display_name      String            @db.VarChar(100)
+  status            String            @default("active") @db.VarChar(32)
+  created_at        DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime          @default(now()) @updatedAt @db.Timestamptz(6)
+  deleted_at        DateTime?         @db.Timestamptz(6)
+  workspace_members WorkspaceMember[]
+  user_roles        UserRole[]
+  audit_logs        AuditLog[]        @relation("AuditActor")
+
+  @@unique([email], map: "users_email_key")
+  @@index([status], map: "users_status_idx")
+  @@index([deleted_at], map: "users_deleted_at_idx")
+  @@map("users")
+}
+
+model Workspace {
+  id         String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String            @db.VarChar(120)
+  slug       String            @db.VarChar(80)
+  status     String            @default("active") @db.VarChar(32)
+  created_at DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at DateTime          @default(now()) @updatedAt @db.Timestamptz(6)
+  deleted_at DateTime?         @db.Timestamptz(6)
+  members    WorkspaceMember[]
+  roles      Role[]
+  user_roles UserRole[]
+  audit_logs AuditLog[]
+
+  @@unique([slug], map: "workspaces_slug_key")
+  @@index([status], map: "workspaces_status_idx")
+  @@index([deleted_at], map: "workspaces_deleted_at_idx")
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workspace_id String    @db.Uuid
+  user_id      String    @db.Uuid
+  status       String    @default("active") @db.VarChar(32)
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+  deleted_at   DateTime? @db.Timestamptz(6)
+  workspace    Workspace @relation(fields: [workspace_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  user         User      @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([workspace_id, user_id], map: "workspace_members_workspace_id_user_id_key")
+  @@index([user_id], map: "workspace_members_user_id_idx")
+  @@index([status], map: "workspace_members_status_idx")
+  @@index([deleted_at], map: "workspace_members_deleted_at_idx")
+  @@map("workspace_members")
+}
+
+model Role {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workspace_id     String           @db.Uuid
+  code             String           @db.VarChar(80)
+  name             String           @db.VarChar(120)
+  description      String?          @db.Text
+  is_system        Boolean          @default(false)
+  created_at       DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime         @default(now()) @updatedAt @db.Timestamptz(6)
+  deleted_at       DateTime?        @db.Timestamptz(6)
+  workspace        Workspace        @relation(fields: [workspace_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  role_permissions RolePermission[]
+  user_roles       UserRole[]
+
+  @@unique([workspace_id, code], map: "roles_workspace_id_code_key")
+  @@index([deleted_at], map: "roles_deleted_at_idx")
+  @@map("roles")
+}
+
+model Permission {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code             String           @db.VarChar(120)
+  name             String           @db.VarChar(120)
+  description      String?          @db.Text
+  created_at       DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime         @default(now()) @updatedAt @db.Timestamptz(6)
+  role_permissions RolePermission[]
+
+  @@unique([code], map: "permissions_code_key")
+  @@map("permissions")
+}
+
+model RolePermission {
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  role_id       String     @db.Uuid
+  permission_id String     @db.Uuid
+  created_at    DateTime   @default(now()) @db.Timestamptz(6)
+  role          Role       @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  permission    Permission @relation(fields: [permission_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([role_id, permission_id], map: "role_permissions_role_id_permission_id_key")
+  @@index([permission_id], map: "role_permissions_permission_id_idx")
+  @@map("role_permissions")
+}
+
+model UserRole {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id      String    @db.Uuid
+  role_id      String    @db.Uuid
+  workspace_id String    @db.Uuid
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  user         User      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  role         Role      @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  workspace    Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([user_id, role_id, workspace_id], map: "user_roles_user_id_role_id_workspace_id_key")
+  @@index([role_id], map: "user_roles_role_id_idx")
+  @@index([workspace_id], map: "user_roles_workspace_id_idx")
+  @@map("user_roles")
+}
+
+model AuditLog {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workspace_id String?    @db.Uuid
+  actor_id     String?    @db.Uuid
+  action       String     @db.VarChar(120)
+  target_table String     @db.VarChar(120)
+  target_id    String?    @db.VarChar(120)
+  related_type String?    @db.VarChar(120)
+  related_id   String?    @db.VarChar(120)
+  before_data  Json?
+  after_data   Json?
+  request_id   String?    @db.VarChar(120)
+  ip_address   String?    @db.Inet
+  user_agent   String?    @db.Text
+  created_at   DateTime   @default(now()) @db.Timestamptz(6)
+  workspace    Workspace? @relation(fields: [workspace_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  actor        User?      @relation("AuditActor", fields: [actor_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([workspace_id, created_at], map: "audit_logs_workspace_id_created_at_idx")
+  @@index([actor_id, created_at], map: "audit_logs_actor_id_created_at_idx")
+  @@index([target_table, target_id], map: "audit_logs_target_table_target_id_idx")
+  @@index([request_id], map: "audit_logs_request_id_idx")
+  @@map("audit_logs")
+}

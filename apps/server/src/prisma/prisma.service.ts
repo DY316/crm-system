@@ -1,14 +1,27 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
 
 @Injectable()
-export class PrismaService implements OnModuleInit, OnModuleDestroy {
-  private readonly logger = new Logger(PrismaService.name);
+export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+  constructor() {
+    const connectionString = process.env.DATABASE_URL;
 
-  onModuleInit(): void {
-    this.logger.log('Prisma module initialized in shell mode');
+    if (!connectionString) {
+      throw new Error('DATABASE_URL must be set before PrismaService is initialized');
+    }
+
+    super({
+      adapter: new PrismaPg(connectionString),
+      log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
+    });
   }
 
-  onModuleDestroy(): void {
-    this.logger.log('Prisma module destroyed');
+  async onModuleInit(): Promise<void> {
+    await this.$connect();
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    await this.$disconnect();
   }
 }
