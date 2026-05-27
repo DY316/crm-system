@@ -1,0 +1,12 @@
+{
+  "name": "crm-system",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "server:build": "pnpm --filter @crm/server build",
+    "server:dev": "pnpm --filter @crm/server start:dev",
+    "server:start": "pnpm --filter @crm/server start",
+    "server:test": "pnpm --filter @crm/server test",
+    "server:typecheck": "pnpm --filter @crm/server typecheck"
+  }
+}
